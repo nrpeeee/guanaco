@@ -1,0 +1,63 @@
+name: Release
+
+# Push a version tag to publish a release:
+#   git tag v0.1.0
+#   git push origin v0.1.0
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # create the release and upload its files
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          check-latest: true
+          cache: false
+
+      - name: Test
+        run: go test -count=1 ./...
+
+      - name: Build
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist
+          for target in windows/amd64 windows/arm64 linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+            GOOS="${target%/*}"; GOARCH="${target#*/}"
+            name="guanaco_${VERSION}_${GOOS}_${GOARCH}"
+            ldflags="-s -w -X main.version=${VERSION}"
+            exe="Guanaco"
+            if [ "$GOOS" = windows ]; then
+              ldflags="$ldflags -H=windowsgui" # no console window; errors go to guanaco.log
+              exe="Guanaco.exe"
+            fi
+            mkdir -p "build/$name"
+            GOOS=$GOOS GOARCH=$GOARCH go build -trimpath -ldflags "$ldflags" -o "build/$name/$exe" ./cmd/guanaco
+            cp README.md LICENSE THIRD_PARTY_NOTICES.md "build/$name/"
+            if [ "$GOOS" = windows ]; then
+              (cd build && zip -qr "../dist/$name.zip" "$name")
+            else
+              tar -C build -czf "dist/$name.tar.gz" "$name"
+            fi
+          done
+          (cd dist && sha256sum * > SHA256SUMS)
+          cat dist/SHA256SUMS
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "Guanaco ${GITHUB_REF_NAME}" \
+            --generate-notes \
+            --verify-tag \
+            $([[ "$GITHUB_REF_NAME" == *-* ]] && echo --prerelease)

@@ -73,7 +73,10 @@ section "Building & Installing $BINARY"
 
 command -v go >/dev/null 2>&1 || die "go: command not found in PATH (install Go 1.26 or newer)"
 
-if run_spin "Compiling binary" go build -ldflags="-s -w" -o "${BINARY}" ./cmd/guanaco; then
+VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
+VERSION="${VERSION#v}"
+
+if run_spin "Compiling binary (version ${VERSION})" go build -ldflags="-s -w -X main.version=${VERSION}" -o "${BINARY}" ./cmd/guanaco; then
     ok "Successfully compiled ${BINARY}"
 else
     die "Compilation failed"

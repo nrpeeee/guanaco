@@ -64,10 +64,35 @@ endpoint. Everything it stores stays in a folder you control.
 | ![Prompt library opened with /](docs/screenshots/prompts.png) | ![Provider settings](docs/screenshots/providers.png) |
 | **Prompt library**, opened by typing `/`. | **Providers.** Local by default; cloud stays off until you add a key. |
 
-## Quick start
+## Download
 
-You need [Go](https://go.dev/dl/) 1.26 or newer to build. To chat with local
-models you also need Ollama or llama.cpp running.
+Grab the file for your system from the
+[latest release](https://github.com/nrpeeee/guanaco/releases/latest), unzip it
+and run `Guanaco` (`Guanaco.exe` on Windows). There's nothing to install. To
+chat with local models you also need [Ollama](https://ollama.com) or llama.cpp
+running.
+
+| System | File |
+|---|---|
+| Windows (most PCs) | `guanaco_<version>_windows_amd64.zip` |
+| Windows on ARM | `guanaco_<version>_windows_arm64.zip` |
+| macOS, Apple Silicon | `guanaco_<version>_darwin_arm64.tar.gz` |
+| macOS, Intel | `guanaco_<version>_darwin_amd64.tar.gz` |
+| Linux | `guanaco_<version>_linux_amd64.tar.gz` (or `_arm64`) |
+
+The binaries are built by [GitHub Actions](.github/workflows/release.yml) from
+the tagged source, and `SHA256SUMS` lists their checksums. They aren't
+code-signed yet, so the first launch shows a warning:
+
+- **Windows:** SmartScreen says "Windows protected your PC". Click
+  **More info → Run anyway**.
+- **macOS:** right-click the app and choose **Open**, or run
+  `xattr -d com.apple.quarantine Guanaco` once.
+
+## Build from source
+
+You need [Go](https://go.dev/dl/) 1.26 or newer. To chat with local models you
+also need Ollama or llama.cpp running.
 
 ```bash
 git clone https://github.com/nrpeeee/guanaco.git
@@ -100,6 +125,7 @@ plus Guanaco on Windows; edit the settings at the top before using it.
 | `-no-browser` | off | Don't open a browser tab on start. |
 | `-lan` | off | Listen on all interfaces. **No authentication.** Cloud providers and tools are disabled. |
 | `-lan-cloud` | off | With `-lan`, also allow cloud providers (anyone on your network can then spend your API credits). |
+| `-version` | | Print the version and exit. |
 
 API keys can be typed into **Providers** in the app or supplied through the
 usual environment variables (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`,

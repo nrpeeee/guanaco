@@ -20,7 +20,13 @@ import (
 	"guanaco/web"
 )
 
-const version = "2.0.0"
+// version is set at build time from the git tag:
+//
+//	go build -ldflags "-X main.version=0.1.0" ./cmd/guanaco
+//
+// Release builds (.github/workflows/release.yml) and the installers do this;
+// a plain `go build` reports "dev".
+var version = "dev"
 
 type App struct {
 	oll      *OllamaRef
@@ -45,7 +51,12 @@ func main() {
 	noBrowser := flag.Bool("no-browser", false, "don't open the browser on start")
 	allowLAN := flag.Bool("lan", false, "listen on all interfaces (no auth! only on trusted networks; cloud providers are blocked)")
 	lanCloud := flag.Bool("lan-cloud", false, "with -lan, also allow cloud providers (anyone on the network can spend your API credits)")
+	showVersion := flag.Bool("version", false, "print the version and exit")
 	flag.Parse()
+	if *showVersion {
+		fmt.Println("Guanaco", version)
+		return
+	}
 	// An explicit -ollama flag or OLLAMA_HOST pins the URL: no auto-switching.
 	pinned := os.Getenv("OLLAMA_HOST") != ""
 	flag.Visit(func(f *flag.Flag) {

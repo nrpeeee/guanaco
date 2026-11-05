@@ -24,7 +24,11 @@ exit /b %RC%
 #:PSSTART
 
 $Binary  = 'Guanaco'
-$LdFlags = '-s -w -H=windowsgui'
+$Version = $null
+if (Get-Command git -ErrorAction SilentlyContinue) { $Version = (git describe --tags --always --dirty 2>$null) }
+if (-not $Version) { $Version = 'dev' }
+$Version = $Version -replace '^v', ''
+$LdFlags = "-s -w -H=windowsgui -X main.version=$Version"
 
 $Root = (Get-Location).Path
 
