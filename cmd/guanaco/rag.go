@@ -111,7 +111,7 @@ type ragDoc struct {
 
 type ragChunk struct {
 	Text string
-	Vec  []float32 // L2-normalised, so cosine similarity is a dot product
+	Vec  []float32 // L2-normalized, so cosine similarity is a dot product
 }
 
 type ragDisk struct {

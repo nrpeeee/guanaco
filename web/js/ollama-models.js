@@ -35,7 +35,7 @@ export function renderModelTable() {
     : sort === 'recent' ? (a, b) => String(b.modified_at || '').localeCompare(String(a.modified_at || ''))
       : (a, b) => a.name.localeCompare(b.name));
   $('#modelTable').innerHTML = list.map(m => {
-    const when = m.modified_at ? new Date(m.modified_at).toLocaleDateString() : '';
+    const when = m.modified_at ? new Date(m.modified_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
     return `<div class="mt-row"><span class="nm" title="${esc(m.name)}${when ? ' · updated ' + esc(when) : ''}">${esc(m.name)}</span>
     <span class="c hide-sm">${esc(m.details?.parameter_size || '')}</span><span class="c hide-sm">${esc(m.details?.quantization_level || '')}</span>
     <span class="c">${fmtBytes(m.size)}</span><button class="icon-btn sm" data-delmodel="${esc(m.name)}" title="Delete">${ic('trash')}</button></div>`;
@@ -77,7 +77,7 @@ export async function pullModel() {
     txt.textContent = names.length > 1 ? `Pulled ${names.length} models` : `Pulled ${names[0]}`; bar.style.width = '100%';
     $('#pullName').value = '';
   } catch (e) {
-    if (e.name === 'AbortError') txt.textContent = 'Cancelled (partial downloads resume next time)';
+    if (e.name === 'AbortError') txt.textContent = 'Canceled (partial downloads resume next time)';
     else { txt.textContent = 'Error: ' + e.message; toast(e.message, true); }
   } finally { $('#pullBtn').disabled = false; $('#pullCancel').classList.add('hidden'); pullCtl = null; }
 }

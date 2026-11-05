@@ -32,7 +32,7 @@ only from your own computer.
   loopback and private addresses.
 - **Tools (MCP)**: the model can *request* a tool call but never runs one. Each
   call is shown with its exact arguments and needs your approval. "Always allow"
-  is per tool and is cancelled automatically if the server's command line changes.
+  is per tool and is canceled automatically if the server's command line changes.
   A server's own "read-only" label is shown but never trusted. Tools only work
   with local models and are disabled in `-lan` mode.
 - **Dictation** audio is only ever sent to a speech-to-text server on your

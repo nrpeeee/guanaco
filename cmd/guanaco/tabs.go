@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Open-tab tracking for the close-the-tab-to-quit behaviour.
+// Open-tab tracking for the close-the-tab-to-quit behavior.
 //
 // Every page sends POST /api/tabs/alive with its own random id when it loads and
 // then on a timer. When a tab closes it sends the /shutdown beacon with that id.

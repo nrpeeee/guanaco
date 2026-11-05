@@ -974,7 +974,7 @@ func (a *App) providerName(id string) string {
 func (a *App) chatMarkdown(c *exportChat, withThinking bool) string {
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "# %s\n\n", c.Title)
-	fmt.Fprintf(&sb, "_Model: %s (%s) · Exported %s_\n\n", c.Model, a.providerName(c.Provider), time.Now().Format("2006-01-02 15:04"))
+	fmt.Fprintf(&sb, "_Model: %s (%s) · Exported %s_\n\n", c.Model, a.providerName(c.Provider), time.Now().Format("Jan 2, 2006 3:04 PM"))
 	if strings.TrimSpace(c.System) != "" {
 		fmt.Fprintf(&sb, "> **System prompt:** %s\n\n", strings.ReplaceAll(c.System, "\n", "\n> "))
 	}
