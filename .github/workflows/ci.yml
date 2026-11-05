@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1" # weekly, so new Go security advisories show up even without commits
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          # Latest patch release, so builds always carry the current standard-library fixes.
+          go-version: stable
+          check-latest: true
+          cache: false # no dependencies (no go.sum), so nothing to cache
+      - name: Format check
+        if: matrix.os == 'ubuntu-latest'
+        run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go test -race -count=1 ./...
+        if: matrix.os != 'windows-latest'
+      - run: go test -count=1 ./...
+        if: matrix.os == 'windows-latest'
+      - run: go build -o ${{ runner.temp }}/guanaco ./cmd/guanaco
+
+  vulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          check-latest: true
+          cache: false # no dependencies (no go.sum), so nothing to cache
+      - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...

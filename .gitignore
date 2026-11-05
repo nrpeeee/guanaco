@@ -1,0 +1,22 @@
+# Build output (anchored: an unanchored "Guanaco" would also match cmd/guanaco
+# on case-insensitive filesystems such as Windows)
+/Guanaco
+/Guanaco.exe
+/guanaco
+/guanaco.exe
+/dist/
+
+# Go
+*.test
+*.out
+/vendor/
+
+# Local data: chats, settings, provider config, documents, guanaco.log
+/data/
+
+# Editor/build leftovers
+*.bak
+
+# OS
+.DS_Store
+Thumbs.db

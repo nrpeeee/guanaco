@@ -1,0 +1,1 @@
+  try { const t = JSON.parse(localStorage.getItem('Guanaco.theme') || '"dark"'); if (t !== 'system') document.documentElement.dataset.theme = t; } catch { document.documentElement.dataset.theme = 'dark'; }

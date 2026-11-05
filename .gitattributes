@@ -1,0 +1,11 @@
+# Keep line endings right for every checkout and for GitHub's zip downloads:
+# cmd.exe misparses LF-only batch files, and bash refuses CRLF scripts.
+* text=auto
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.sh  text eol=lf
+
+*.ico    binary
+*.png    binary
+*.syso   binary
+*.woff2  binary

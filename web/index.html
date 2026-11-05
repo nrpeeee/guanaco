@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070b16">
+<title>Guanaco</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2353d9ff'/%3E%3Cstop offset='1' stop-color='%23b57bff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='%23070b16'/%3E%3Cg transform='translate(4 4) scale(1)'%3E%3Cpath fill='url(%23g)' d='M7.5 23V14C7.5 11.4 7.9 9.3 8.8 7.6L8.2 3.3C8.1 2.7 8.8 2.4 9.2 2.9L10.8 5.5L11.6 2.6C11.8 2 12.6 2 12.7 2.7L13.1 6.2C14.9 6.7 16.3 7.8 17.5 8.8L19.6 9.9C20.6 10.4 20.5 11.9 19.4 12.2L16.2 13.1C14.9 13.5 14.2 14.5 14.2 16V23Z'/%3E%3Ccircle cx='13.6' cy='9.3' r='.9' fill='%23070b16'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<script src="theme-init.js"></script>
+</head>
+<body>
+<div id="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside id="sidebar">
+    <div class="sb-top">
+      <div class="brand"><span class="brand-mark" data-icon="guanacoMark"></span><span>Guanaco</span></div>
+      <button class="icon-btn" id="collapseBtn" title="Close sidebar (Ctrl .)" data-icon="panel"></button>
+    </div>
+
+    <button class="new-chat" id="newChatBtn"><span class="plus" data-icon="plus"></span>New chat<kbd>Ctrl ⇧ O</kbd></button>
+
+    <div class="seg" role="tablist">
+      <button class="seg-btn active" data-tab="chats"><span data-icon="chat"></span>Chats</button>
+      <button class="seg-btn" data-tab="settings"><span data-icon="sliders"></span>Settings</button>
+    </div>
+
+    <!-- chats tab -->
+    <section class="sb-pane" id="pane-chats">
+      <div class="search-box"><span data-icon="search"></span><input id="chatSearch" placeholder="Search chats…" autocomplete="off"><kbd>Ctrl K</kbd></div>
+      <div id="chatList" class="chat-list"></div>
+    </section>
+
+    <!-- settings tab -->
+    <section class="sb-pane hidden" id="pane-settings">
+      <div class="set-group">
+        <div class="set-head">Model</div>
+        <div id="modelInfo" class="model-info muted">No model selected</div>
+      </div>
+
+      <div class="set-group">
+        <div class="set-head">System prompt <span class="hint">this chat</span></div>
+        <div class="row gap">
+          <select id="presetSelect" class="input grow"></select>
+          <button class="icon-btn sm" id="presetSave" title="New profile" data-icon="plus"></button>
+          <button class="icon-btn sm" id="presetEdit" title="Edit profile" data-icon="edit"></button>
+          <button class="icon-btn sm" id="presetDel" title="Delete preset" data-icon="trash"></button>
+        </div>
+        <textarea id="systemPrompt" class="input mono-ish" rows="5" placeholder="You are a helpful assistant…"></textarea>
+        <div id="profileInfo" class="hint hidden"></div>
+      </div>
+
+      <div class="set-group">
+        <div class="set-head">Generation <span class="hint" id="paramProv"></span></div>
+        <label class="slider" data-param="temperature"><span>Temperature</span><output id="tempOut"></output><input type="range" id="temperature" min="0" max="2" step="0.05"></label>
+        <label class="slider" data-param="top_p"><span>Top P</span><output id="topPOut"></output><input type="range" id="topP" min="0" max="1" step="0.01"></label>
+        <label class="slider" data-param="top_k"><span>Top K</span><output id="topKOut"></output><input type="range" id="topK" min="1" max="100" step="1"></label>
+        <label class="slider" data-param="repeat_penalty"><span>Repeat penalty</span><output id="repeatOut"></output><input type="range" id="repeatPenalty" min="0.8" max="1.5" step="0.01"></label>
+        <div class="field" data-param="num_ctx"><span>Context window</span>
+          <select id="numCtx" class="input">
+            <option value="0">Model default</option><option value="4096">4K</option><option value="8192">8K</option>
+            <option value="16384">16K</option><option value="32768">32K</option><option value="65536">64K</option><option value="131072">128K</option><option value="262144">256K</option>
+          </select></div>
+        <div class="field" data-param="max_tokens"><span>Max output tokens</span><input id="numPredict" class="input" type="number" min="-1" placeholder="auto"></div>
+        <div class="field" data-param="seed"><span>Seed</span><input id="seed" class="input" type="number" placeholder="random"></div>
+        <div class="field" data-param="keep_alive"><span>Keep model loaded</span>
+          <select id="keepAlive" class="input"><option value="">Default (5m)</option><option value="30m">30 min</option><option value="2h">2 hours</option><option value="-1">Forever</option><option value="0">Unload after reply</option></select></div>
+        <div class="param-note hidden" id="paramNote"></div>
+        <button class="link-btn" id="resetParams">Reset to defaults</button>
+      </div>
+
+      <div class="set-group">
+        <div class="set-head">Thinking</div>
+        <div class="pill-group" id="thinkMode">
+          <button data-v="auto">Auto</button><button data-v="on">On</button><button data-v="off">Off</button>
+        </div>
+        <label class="check"><input type="checkbox" id="showThinking"><span>Expand thinking while streaming</span></label>
+      </div>
+
+      <div class="set-group">
+        <div class="set-head">Web search</div>
+        <label class="check"><input type="checkbox" id="searchRewrite"><span>Let the model write the search query</span></label>
+        <div class="field"><span>Results to read</span>
+          <select id="searchResults" class="input"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+        <div class="field"><span>Engine</span>
+          <select id="searchEngine" class="input"><option value="duckduckgo">DuckDuckGo (no key)</option><option value="searxng">SearXNG</option></select></div>
+        <input id="searxUrl" class="input hidden" placeholder="http://localhost:8888">
+      </div>
+    </section>
+
+    <div class="sb-foot">
+      <div class="status" id="ollamaStatus"><span class="dot"></span><span class="txt">Connecting…</span></div>
+      <div class="row">
+        <button class="icon-btn" id="providersBtn" title="Providers & API keys" data-icon="plug"></button>
+        <button class="icon-btn" id="ragBtn" title="Documents" data-icon="file"></button>
+        <button class="icon-btn" id="modelsBtn" title="Ollama models" data-icon="box"></button>
+        <button class="icon-btn" id="prefsBtn" title="Preferences" data-icon="gear"></button>
+      </div>
+    </div>
+  </aside>
+  <div id="scrim"></div>
+
+  <!-- ============ MAIN ============ -->
+  <main id="main">
+    <header id="topbar">
+      <button class="icon-btn hidden" id="openSidebar" title="Open sidebar (Ctrl .)" data-icon="panel"></button>
+      <button id="chatTitle" class="title-btn" title="Rename"></button>
+      <div class="grow"></div>
+      <div class="menu-wrap">
+        <button class="ghost-btn hidden" id="exportBtn"><span data-icon="download"></span>Export</button>
+        <div class="menu hidden" id="exportMenu">
+          <button data-fmt="md"><span data-icon="file"></span>Markdown (.md)</button>
+          <button data-fmt="md-think"><span data-icon="file"></span>Markdown + thinking</button>
+          <button data-fmt="json"><span data-icon="code"></span>JSON (.json)</button>
+          <button data-fmt="txt"><span data-icon="file"></span>Plain text (.txt)</button>
+          <hr><button data-fmt="copy"><span data-icon="copy"></span>Copy as Markdown</button>
+        </div>
+      </div>
+    </header>
+
+    <div id="scroller">
+      <div id="welcome" class="welcome">
+        <div class="hero-mark" data-icon="guanacoMark"></div>
+        <h1 id="greeting">Hello</h1>
+      </div>
+      <div id="messages"></div>
+    </div>
+
+    <div id="composerWrap">
+      <div id="slashMenu" class="slash-menu hidden"></div>
+      <button id="jumpBtn" class="jump hidden" data-icon="down" title="Scroll to bottom"></button>
+      <form id="composer" class="composer">
+        <div id="attachments" class="attachments"></div>
+        <textarea id="input" rows="1" placeholder="How can I help you today?" autocomplete="off"></textarea>
+        <div class="composer-bar">
+          <button type="button" class="c-btn" id="attachBtn" title="Attach files or images" data-icon="plus"></button>
+          <button type="button" class="c-btn" id="folderBtn" title="Attach a folder (text files only)" data-icon="folder"></button>
+          <button type="button" class="c-btn toggle" id="searchToggle" title="Web search"><span data-icon="globe"></span><span class="lbl">Search</span></button>
+          <button type="button" class="c-btn toggle" id="ragToggle" title="Search my documents"><span data-icon="file"></span><span class="lbl">Docs</span></button>
+          <button type="button" class="c-btn toggle hidden" id="toolsToggle" title="Let the model use tools (asks before every call)"><span data-icon="zap"></span><span class="lbl">Tools</span></button>
+          <button type="button" class="c-btn toggle hidden" id="thinkToggle" title="Extended thinking"><span data-icon="bulb"></span><span class="lbl">Think</span></button>
+          <button type="button" class="c-btn toggle" id="cmpToggle" title="Compare two models side by side"><span data-icon="columns"></span><span class="lbl">Compare</span></button>
+          <button type="button" class="c-btn" id="promptsBtn" title="Prompt library (or type / in the box)" data-icon="book"></button>
+          <button type="button" class="c-btn hidden" id="micBtn" title="Dictate" data-icon="mic"></button>
+          <div class="grow"></div>
+          <div class="menu-wrap">
+            <button type="button" class="model-btn" id="modelBtn"><span class="prov-ic" id="modelProvIc"></span><span id="modelName">Select model</span><span class="cloud-badge hidden" id="modelCloud"></span><span data-icon="chev"></span></button>
+            <div class="menu up model-menu hidden" id="modelMenu">
+              <div class="mm-search"><span data-icon="search"></span><input id="modelSearch" placeholder="Search models…" autocomplete="off"><button type="button" class="icon-btn sm" id="modelRefresh" title="Refresh model lists" data-icon="refresh"></button></div>
+              <div id="modelList" class="mm-list"></div>
+              <div class="mm-foot">
+                <button type="button" data-manage><span data-icon="box"></span>Ollama models</button>
+                <button type="button" data-providers><span data-icon="plug"></span>Providers</button>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="model-btn cmp-model hidden" id="cmpModelBtn" title="Second model to compare with"><span class="vs">vs</span><span id="cmpName">Pick model</span><span data-icon="chev"></span></button>
+          <button type="submit" class="send" id="sendBtn" title="Send (Enter)" data-icon="up"></button>
+        </div>
+        <input type="file" id="fileInput" multiple hidden>
+        <input type="file" id="folderInput" webkitdirectory directory multiple hidden>
+      </form>
+      <div class="disclaimer" id="disclaimer">Local models can make mistakes. Double-check important answers.</div>
+      <div class="suggest" id="suggest">
+        <button data-p="Review this code for bugs and security issues:&#10;&#10;"><span data-icon="code"></span>Code review</button>
+        <button data-p="Explain how this works, step by step: "><span data-icon="bulb"></span>Explain</button>
+        <button data-p="Write a bash script that "><span data-icon="term"></span>Script</button>
+        <button data-p="Summarize the following:&#10;&#10;"><span data-icon="file"></span>Summarize</button>
+      </div>
+    </div>
+    <div id="dropZone" class="drop hidden"><div><span data-icon="upload"></span>Drop files or folders to attach</div></div>
+  </main>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal hidden" id="providersModal">
+  <div class="dialog wide">
+    <div class="dlg-head"><h2>Providers</h2><button class="icon-btn" data-close data-icon="x"></button></div>
+    <div class="dlg-body">
+      <p class="muted small" id="provIntro">Ollama is always local. Cloud providers stay off until you add a key, and a chat only ever uses the provider you pick — Guanaco never falls back to another one.</p>
+      <div class="lan-banner hidden" id="provLan"><span data-icon="alert"></span>Running with <code>-lan</code>: provider settings are read-only and cloud providers are blocked.</div>
+      <div id="provList" class="prov-list"></div>
+
+      <details class="add-prov" id="addProv">
+        <summary><span data-icon="plus"></span>Add an OpenAI-compatible endpoint</summary>
+        <div class="add-body">
+          <div class="presets" id="provPresets">
+            <button type="button" data-n="LM Studio" data-u="http://localhost:1234/v1" data-l="1">LM Studio</button>
+            <button type="button" data-n="llama.cpp" data-u="http://localhost:8080/v1" data-l="1">llama.cpp</button>
+            <button type="button" data-n="vLLM" data-u="http://localhost:8000/v1" data-l="1">vLLM</button>
+            <button type="button" data-n="OpenRouter" data-u="https://openrouter.ai/api/v1" data-l="0">OpenRouter</button>
+            <button type="button" data-n="Groq" data-u="https://api.groq.com/openai/v1" data-l="0">Groq</button>
+          </div>
+          <div class="grid2">
+            <input class="input" id="newProvName" placeholder="Name">
+            <input class="input" id="newProvUrl" placeholder="Base URL, e.g. http://localhost:1234/v1">
+          </div>
+          <input class="input" id="newProvKey" type="password" placeholder="API key (optional for local servers)" autocomplete="off">
+          <div class="row between">
+            <label class="check"><input type="checkbox" id="newProvLocal" checked><span>Runs on my machine / LAN (treat as local)</span></label>
+            <button class="btn primary" id="newProvAdd" type="button">Add endpoint</button>
+          </div>
+        </div>
+      </details>
+
+      <div class="pref"><div><b>Helper requests to cloud models</b><small>Auto-titles and search-query rewriting for cloud chats cost extra calls. Off: titles come from your first message.</small></div><input type="checkbox" class="switch" id="cloudHelpers"></div>
+      <p class="muted small prot" id="provProtection"></p>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="modelsModal">
+  <div class="dialog wide">
+    <div class="dlg-head"><h2>Ollama models</h2><button class="icon-btn" data-close data-icon="x"></button></div>
+    <div class="dlg-body">
+      <div class="lan-banner hidden" id="modelsOffline"><span data-icon="alert"></span><span class="grow">Ollama isn't reachable.</span><button class="btn sm" id="modelsFix">Detect / start</button></div>
+      <div class="pull-row">
+        <input id="pullName" class="input grow" placeholder="Pull a model, e.g. qwen2.5-coder:7b (separate several with commas)" autocomplete="off">
+        <button class="btn primary" id="pullBtn">Pull</button>
+        <button class="btn danger hidden" id="pullCancel">Cancel</button>
+      </div>
+      <div id="pullChips" class="pull-chips"></div>
+      <div id="pullProgress" class="pull-progress hidden"><div class="bar"><i></i></div><span class="txt"></span></div>
+      <div class="set-head">Loaded in memory</div>
+      <div id="psList" class="model-table"></div>
+      <div class="set-head">Installed <span id="modelTotal" class="muted small"></span></div>
+      <div class="pull-row"><input id="modelFilter" class="input grow" placeholder="Filter installed models…" autocomplete="off">
+        <select id="modelSort" class="input"><option value="name">Name</option><option value="size">Size</option><option value="recent">Recently updated</option></select></div>
+      <div id="modelTable" class="model-table"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="prefsModal">
+  <div class="dialog">
+    <div class="dlg-head"><h2>Preferences</h2><button class="icon-btn" data-close data-icon="x"></button></div>
+    <div class="dlg-body">
+      <div class="pref"><div><b>Your name</b><small>Used in the greeting</small></div><input id="userName" class="input" placeholder="Name"></div>
+      <div class="pref"><div><b>Theme</b></div>
+        <div class="pill-group" id="themeSel"><button data-v="dark">Dark</button><button data-v="light">Light</button><button data-v="system">System</button></div></div>
+      <div class="pref"><div><b>Response font</b></div>
+        <div class="pill-group" id="fontSel"><button data-v="sans">Sans</button><button data-v="serif">Serif</button><button data-v="mono">Mono</button></div></div>
+      <div class="pref"><div><b>Auto-title chats</b><small>Asks the model for a short title after the first reply</small></div><input type="checkbox" class="switch" id="autoTitle"></div>
+      <div class="pref"><div><b>Enter sends</b><small>Off: Ctrl+Enter sends</small></div><input type="checkbox" class="switch" id="enterSends"></div>
+      <div class="pref"><div><b>Ollama</b><small id="ollamaUrlTxt"></small></div><span class="muted small">Auto-detected; pin it with the <code>-ollama</code> flag</span></div>
+      <div class="pref"><div><b>Documents → cloud models</b><small>Off: document excerpts are never sent to a cloud model (Documents are skipped instead)</small></div><input type="checkbox" class="switch" id="ragCloud"></div>
+      <div class="pref"><div><b>Tools (MCP)</b><small>Let local models call tools — you approve every call</small></div><button class="btn" id="manageTools">Manage…</button></div>
+      <div class="pref"><div><b>Voice</b><small>Read replies aloud and dictate messages</small></div><button class="btn" id="voiceBtn">Set up…</button></div>
+      <div class="pref"><div><b>Prompt library</b><small>Reusable prompts — type <code>/</code> in the message box</small></div><button class="btn" id="managePrompts">Manage…</button></div>
+      <hr>
+      <div class="pref"><div><b>Back up everything</b><small>One zip with chats, settings and provider setup. API keys are never included.</small></div><button class="btn" id="backupBtn">Back up</button></div>
+      <div class="pref"><div><b>Restore from backup</b><small>Choose a Guanaco backup zip</small></div><button class="btn" id="restoreBtn">Restore…</button><input type="file" id="restoreFile" accept=".zip,application/zip" hidden></div>
+      <div class="pref"><div><b>Export all chats</b><small>One JSON file with everything (API keys are never included)</small></div><button class="btn" id="exportAll">Export</button></div>
+      <div class="pref"><div><b>Import chats</b><small>From a Guanaco JSON export</small></div><button class="btn" id="importBtn">Import</button><input type="file" id="importFile" accept=".json" hidden></div>
+      <div class="pref"><div><b>Delete all chats</b><small>Cannot be undone</small></div><button class="btn danger" id="deleteAll">Delete all</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="restoreModal">
+  <div class="dialog sm">
+    <div class="dlg-head"><h2>Restore backup</h2><button class="icon-btn" data-close data-icon="x"></button></div>
+    <div class="dlg-body">
+      <p class="muted small" id="restoreFileName"></p>
+      <div class="pill-group" id="restoreMode"><button data-v="merge" class="on">Merge</button><button data-v="replace">Replace</button></div>
+      <p class="muted small" id="restoreModeNote"></p>
+      <label class="check"><input type="checkbox" id="restoreSettings"><span>Also restore settings</span></label>
+      <label class="check"><input type="checkbox" id="restoreProviders"><span>Also restore provider setup (cloud providers stay off)</span></label>
+    </div>
+    <div class="dlg-foot"><button class="btn" data-close>Cancel</button><button class="btn primary" id="restoreGo">Restore</button></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="toolsModal">
+  <div class="dialog wide">
+    <div class="dlg-head"><h2>Tools</h2><button class="icon-btn" data-close data-icon="x"></button></div>
+    <div class="dlg-body">
+      <p class="muted small">Tools let a <b>local</b> model do things — read files, fetch pages, keep notes. They come from <b>MCP servers</b>: programs that run on this computer with <b>your permissions</b>, so only add ones you trust. Guanaco shows the exact arguments and asks before every call. Tools never work with cloud models.</p>
+      <div id="toolList" class="pl-list tall"></div>
+      <div class="set-head">Always allowed</div>
+      <p class="muted small">Tools you chose “Run &amp; always allow” for. Changing a server's command cancels its entries.</p>
+      <div id="toolsAllowList" class="pl-list"></div>
+      <hr>
+      <div class="set-head" id="tsFormTitle">Add a tool server</div>
+      <div class="pull-chips" id="tsPresets"></div>
+      <input id="tsName" class="input" placeholder="Name" style="width:100%">
+      <input id="tsCmd" class="input mono-ish" placeholder="Command, e.g. npx -y @modelcontextprotocol/server-filesystem C:\Users\you\Documents" style="width:100%">
+      <textarea id="tsEnv" class="input mono-ish" rows="2" placeholder="Environment variables (optional) — one KEY=value per line"></textarea>
+      <div id="tsMsg" class="muted small rag-msg"></div>
+      <div class="row gap" style="justify-content:flex-end"><button class="btn" id="tsClear">Clear</button><button class="btn primary" id="tsSave">Save server</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="voiceModal">
+  <div class="dialog">
+    <div class="dlg-head"><h2>Voice</h2><button class="icon-btn" data-close data-icon="x"></button></div>
+    <div class="dlg-body">
+      <div class="set-head">Read aloud</div>
+      <p class="muted small">Every reply gets a speaker button. Speech is generated by your operating system, on this computer. <span id="ttsNote"></span></p>
+      <div class="pref"><div><b>Read new replies automatically</b></div><input type="checkbox" class="switch" id="ttsAuto"></div>
+      <div class="pref"><div><b>Voice</b></div><select id="ttsVoice" class="input"></select></div>
+      <div class="pref"><div><b>Speed</b></div><div class="row gap"><input type="range" id="ttsRate" min="0.6" max="1.6" step="0.05" style="width:120px"><span id="ttsRateVal" class="muted small" style="width:44px"></span></div></div>
+      <div class="row gap" style="justify-content:flex-end"><button class="btn" id="ttsTest">Play sample</button></div>
+      <hr>
+      <div class="set-head">Dictation</div>
+      <div class="pref"><div><b>Speech to text</b><small>Adds a microphone button to the message box</small></div>
+        <select id="sttMode" class="input"><option value="off">Off</option><option value="whisper">Local whisper server</option><option value="browser">Browser dictation</option></select></div>
+      <p class="muted small hidden" id="browserSttNote">Browser dictation may send your audio to Google or Microsoft. Prefer the local whisper server if that matters.</p>
+      <div id="whisperBox" class="hidden" style="display:flex;flex-direction:column;gap:10px">
+        <p class="muted small">Start a whisper server on this computer, e.g. whisper.cpp: <code>whisper-server -m ggml-base.en.bin --port 8081</code>. Only this computer or your local network is allowed; audio never goes anywhere else.</p>
+        <div class="pref"><div><b>Server URL</b></div><input id="whisperUrl" class="input" placeholder="http://127.0.0.1:8081"></div>
+        <div class="pref"><div><b>API style</b></div><select id="whisperStyle" class="input"><option value="inference">whisper.cpp (/inference)</option><option value="openai">OpenAI-compatible (/v1/audio/transcriptions)</option></select></div>
+        <div class="pref" id="whisperModelRow"><div><b>Model name</b><small>Only for OpenAI-style servers</small></div><input id="whisperModel" class="input" placeholder="whisper-1"></div>
+        <div class="pref"><div><b>Language</b><small>Blank = auto-detect (e.g. en)</small></div><input id="sttLang" class="input" placeholder="auto"></div>
+        <div class="row gap"><button class="btn" id="whisperTest">Test connection</button></div>
+        <div id="whisperMsg" class="muted small rag-msg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="ragModal">
+  <div class="dialog wide">
+    <div class="dlg-head"><h2>Documents</h2><button class="icon-btn" data-close data-icon="x"></button></div>
+    <div class="dlg-body">
+      <p class="muted small">Index your own files and Guanaco adds the most relevant passages to your questions (turn on <b>Docs</b> in the message box). Files are embedded by a <b>local</b> model and stored only on this computer. Text files only — code, Markdown, TXT, CSV…; PDFs aren't supported yet.</p>
+      <div class="row gap">
+        <select id="ragProvSel" class="input" style="width:150px"></select>
+        <input id="ragModelIn" class="input" list="ragModelList" placeholder="Embedding model, e.g. nomic-embed-text" style="flex:1;min-width:0;width:auto">
+        <datalist id="ragModelList"></datalist>
+        <button class="btn" id="ragTest">Test</button>
+      </div>
+      <div id="ragMsg" class="muted small rag-msg"></div>
+      <div class="row gap">
+        <button class="btn primary" id="ragAddFiles">Add files…</button>
+        <button class="btn" id="ragAddFolder">Add folder…</button>
+        <button class="btn hidden" id="ragCancel">Cancel</button>
+        <button class="btn hidden" id="ragPull"></button>
+      </div>
+      <input type="file" id="ragFileIn" multiple hidden>
+      <input type="file" id="ragFolderIn" webkitdirectory directory multiple hidden>
+      <div id="ragList" class="pl-list tall"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="profileModal">
+  <div class="dialog">
+    <div class="dlg-head"><h2 id="pfTitle">New profile</h2><button class="icon-btn" data-close data-icon="x"></button></div>
+    <div class="dlg-body">
+      <input id="pfName" class="input" placeholder="Profile name" style="width:100%">
+      <textarea id="pfPrompt" class="input mono-ish" rows="7" placeholder="System prompt — how this assistant should behave…"></textarea>
+      <div class="pref"><div><b>Default model</b><small>Local models only. Selected when you pick this profile.</small></div><select id="pfModel" class="input"></select></div>
+      <div class="pref"><div><b>Temperature</b><small>Leave blank to use your Generation setting</small></div><input id="pfTemp" class="input" type="number" min="0" max="2" step="0.05" placeholder="—"></div>
+    </div>
+    <div class="dlg-foot"><button class="btn" data-close>Cancel</button><button class="btn primary" id="pfSave">Save profile</button></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="promptsModal">
+  <div class="dialog">
+    <div class="dlg-head"><h2>Prompt library</h2><button class="icon-btn" data-close data-icon="x"></button></div>
+    <div class="dlg-body">
+      <p class="muted small">Type <code>/</code> in the message box to insert one. <code>{{placeholders}}</code> get selected for you — press Tab to jump to the next.</p>
+      <div id="promptList" class="pl-list"></div>
+      <hr>
+      <input id="plName" class="input" placeholder="Name" style="width:100%">
+      <textarea id="plText" class="input mono-ish" rows="5" placeholder="Prompt text…"></textarea>
+      <div class="row gap" style="justify-content:flex-end"><button class="btn" id="plClear">Clear</button><button class="btn primary" id="plSave">Add prompt</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="promptModal">
+  <div class="dialog sm">
+    <div class="dlg-head"><h2 id="promptTitle"></h2></div>
+    <div class="dlg-body"><p id="promptMsg" class="muted"></p><input id="promptInput" class="input"></div>
+    <div class="dlg-foot"><button class="btn" id="promptCancel">Cancel</button><button class="btn primary" id="promptOk">OK</button></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script src="vendor/marked.min.js"></script>
+<script src="vendor/purify.min.js"></script>
+<script src="vendor/highlight.min.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
